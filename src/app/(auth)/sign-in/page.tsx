@@ -17,7 +17,7 @@ import {
 import { Input } from "@/components/ui/input";
 import axios, { AxiosError } from "axios";
 
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { useEffect } from "react";
 import { ApiError } from "@/types/api-error";
 
@@ -60,9 +60,9 @@ export default function Page() {
 		checkUnique();
 	}, [debouncedValue]);
 
-	async function onSubmit(values: TSignIn) {
-		console.log(values);
-	}
+	const onSubmit: SubmitHandler<TSignIn> = (data) => {
+		setIsChecking(true);
+	};
 
 	return (
 		<main>

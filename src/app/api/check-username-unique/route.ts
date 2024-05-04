@@ -1,6 +1,6 @@
 import z from "zod";
 import { connectToDB } from "@/lib/db";
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { User } from "@/models/user-model";
 import { usernameSchema } from "@/schemas/signup-schema";
 
@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
 		const isValid = userNameQuerySchema.safeParse(queryParam);
 
 		if (!isValid.success)
-			return Response.json(
+			return NextResponse.json(
 				{
 					sucess: false,
 					message: isValid.error.message,
@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
 		});
 
 		if (existingVerifiedUser)
-			return Response.json(
+			return NextResponse.json(
 				{
 					sucess: false,
 					message: "Username already taken",
@@ -46,18 +46,18 @@ export async function GET(req: NextRequest) {
 				}
 			);
 
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: false,
 				message: "Username is availale",
 			},
 			{
-				status: 400,
+				status: 200,
 			}
 		);
 	} catch (error) {
 		console.error(`Error checking username`, error);
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: false,
 				message: (error as Error).message,

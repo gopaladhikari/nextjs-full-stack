@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
-// import { Poppins } from "next/font/google";
+import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/auth-provider";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 
-// const poppins = Poppins({ subsets: ["latin"], weight: "400" });
+const poppins = Poppins({ subsets: ["latin"], weight: "400" });
 
 export const metadata: Metadata = {
 	title: "Nextjs full stack application",
@@ -17,9 +17,9 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en">
+		<html lang="en" className="dark">
 			<AuthProvider>
-				<body className="font-sans">
+				<body className={poppins.className}>
 					<main className="antialiased container">{children}</main>
 					<Toaster />
 				</body>

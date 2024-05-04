@@ -2,6 +2,8 @@ import { NextRequest } from "next/server";
 import { getServerSession } from "next-auth";
 import { connectToDB } from "@/lib/db";
 import { User } from "@/models/user-model";
+import { ApiError } from "next/dist/server/api-utils";
+import { ApiResponse } from "@/types/api-response";
 
 export async function POST(req: NextRequest) {
 	await connectToDB();
