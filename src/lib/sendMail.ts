@@ -10,16 +10,22 @@ export async function sendVerificationEmail(
 	otp: string
 ) {
 	try {
-		const data = await resend.emails.send({
+		const res = await resend.emails.send({
 			from: "onboarding@resend.dev",
 			to: email,
-			subject: "Hello world",
+			subject: "Verify you email",
 			react: EmailVerificationCodeTemplate({ username, otp }),
 		});
 
+		if (res.data)
+			return {
+				sucess: true,
+				message: "Verification email send sucessfully.",
+			};
+
 		return {
-			sucess: true,
-			message: "Verification email send sucessfully.",
+			sucess: false,
+			message: res.error?.message ?? "Error sending verification email",
 		};
 	} catch (error) {
 		console.error(`Error sending verification email: ${error}`);

@@ -40,13 +40,47 @@ export async function POST(req: NextRequest) {
 				const expiryDate = new Date();
 				expiryDate.setHours(expiryDate.getHours() + 1);
 				const verifyCode = Math.floor(Math.random() * 1000000).toString();
-				await User.findOneAndUpdate(
+				const updatedUser = await User.findOneAndUpdate(
 					{ email },
 					{
 						password: hasedPassword,
 						verifyCodeExpiry: expiryDate,
 						verifyCode,
 					}
+				);
+
+				if (!updatedUser)
+					return NextResponse.json(
+						{
+							message: "Failed to update user",
+							success: false,
+						},
+						{ status: 500 }
+					);
+
+				const emailInfo = await sendVerificationEmail(
+					email,
+					username,
+					verifyCode
+				);
+
+				if (!emailInfo.sucess) {
+					User.findByIdAndDelete(updatedUser._id);
+					return NextResponse.json(
+						{
+							message: emailInfo.message,
+							success: false,
+						},
+						{ status: 500 }
+					);
+				}
+
+				return NextResponse.json(
+					{
+						message: emailInfo.message,
+						success: true,
+					},
+					{ status: 200 }
 				);
 			}
 		} else {
@@ -78,7 +112,8 @@ export async function POST(req: NextRequest) {
 				verifyCode
 			);
 
-			if (!emailInfo.sucess)
+			if (!emailInfo.sucess) {
+				User.findByIdAndDelete(newUser._id);
 				return NextResponse.json(
 					{
 						message: emailInfo.message,
@@ -86,6 +121,7 @@ export async function POST(req: NextRequest) {
 					},
 					{ status: 500 }
 				);
+			}
 
 			console.log("emailInfo", emailInfo);
 
@@ -98,7 +134,7 @@ export async function POST(req: NextRequest) {
 			);
 		}
 	} catch (error) {
-		console.error(`${error}`);
+		console.error(`Error creating user: ${error}`);
 		return NextResponse.json(
 			{
 				message: (error as Error).message || "Failed to create user",

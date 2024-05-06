@@ -9,6 +9,7 @@ import {
 	Link,
 	Text,
 } from "@react-email/components";
+import { env } from "@/conf/env";
 
 type Props = {
 	username: string;
@@ -55,7 +56,7 @@ export function EmailVerificationCodeTemplate({ username, otp }: Props) {
 				</Row>
 
 				<Row>
-					<Link href={`https://localhost:3000/verify/${username}`}>
+					<Link href={`${env.domain}/verify/${username}`}>
 						Click here to verify user
 					</Link>
 				</Row>
