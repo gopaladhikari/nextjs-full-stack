@@ -123,8 +123,6 @@ export async function POST(req: NextRequest) {
 				);
 			}
 
-			console.log("emailInfo", emailInfo);
-
 			return NextResponse.json(
 				{
 					message: "User created sucessfully. Please verify your email.",

@@ -1,46 +1,48 @@
-import OpenAI from "openai";
-import { OpenAIStream, StreamingTextResponse } from "ai";
-import { NextResponse } from "next/server";
-import { env } from "@/conf/env";
+import mongoose from "mongoose";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "../auth/[...nextauth]/options";
+import { User } from "@/models/user-model";
+import { connectToDB } from "@/lib/db";
+import { NextRequest, NextResponse } from "next/server";
 
-// Create an OpenAI API client (that's edge friendly!)
-const openai = new OpenAI({
-	apiKey: env.openAiApiKey,
-});
+export async function GET(request: NextRequest) {
+	await connectToDB();
+	const session = await getServerSession(authOptions);
+	const _user = session?.user;
 
-// Set the runtime to edge for best performance
-export const runtime = "edge";
-
-export async function POST(req: Request) {
+	if (!session || !_user) {
+		return NextResponse.json(
+			{ success: false, message: "Not authenticated" },
+			{ status: 401 }
+		);
+	}
+	const userId = new mongoose.Types.ObjectId(_user._id);
 	try {
-		const prompt =
-			"Can you suggest insightful and engaging comments for both movies and TV shows? Feel free to include reviews, critiques, analyses, or even just fun observations. Let's share some thoughts on the latest entertainment!";
+		const user = await User.aggregate([
+			{ $match: { _id: userId } },
+			{ $unwind: "$messages" },
+			{ $sort: { "messages.createdAt": -1 } },
+			{ $group: { _id: "$_id", messages: { $push: "$messages" } } },
+		]).exec();
 
-		// Ask OpenAI for a streaming chat completion given the prompt
-		const response = await openai.completions.create({
-			model: "gpt-3.5-turbo-instruct",
-			max_tokens: 400,
-			stream: true,
-			prompt,
-		});
-
-		// Convert the response into a friendly text-stream
-		const stream = OpenAIStream(response);
-
-		// Respond with the stream
-		return new StreamingTextResponse(stream);
-	} catch (error) {
-		if (error instanceof OpenAI.APIError) {
-			const { name, status, message, headers } = error;
+		if (!user || user.length === 0) {
 			return NextResponse.json(
-				{
-					name,
-					status,
-					message,
-					headers,
-				},
-				{ status }
+				{ message: "User not found", success: false },
+				{ status: 404 }
 			);
-		} else console.error(`Error in suggest message`, error);
+		}
+
+		return NextResponse.json(
+			{ messages: user[0].messages },
+			{
+				status: 200,
+			}
+		);
+	} catch (error) {
+		console.error("An unexpected error occurred:", error);
+		return NextResponse.json(
+			{ message: "Internal server error", success: false },
+			{ status: 500 }
+		);
 	}
 }

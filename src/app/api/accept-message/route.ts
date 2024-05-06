@@ -1,18 +1,15 @@
-import { NextRequest } from "next/server";
-import { getServerSession } from "next-auth";
+import { NextRequest, NextResponse } from "next/server";
 import { connectToDB } from "@/lib/db";
 import { User } from "@/models/user-model";
-import { ApiError } from "next/dist/server/api-utils";
-import { ApiResponse } from "@/types/api-response";
+import { getCurrentUser } from "@/lib/session";
 
 export async function POST(req: NextRequest) {
 	await connectToDB();
 
-	const session = await getServerSession();
-	const user = session?.user;
+	const user = await getCurrentUser();
 
 	if (!user)
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: false,
 				message: "Not authenticated",
@@ -34,7 +31,7 @@ export async function POST(req: NextRequest) {
 		);
 
 		if (!updatedUser)
-			return Response.json(
+			return NextResponse.json(
 				{
 					sucess: false,
 					message: "User not found",
@@ -44,7 +41,7 @@ export async function POST(req: NextRequest) {
 				}
 			);
 
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: true,
 				message: "User updated",
@@ -55,7 +52,7 @@ export async function POST(req: NextRequest) {
 			}
 		);
 	} catch (error) {
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: false,
 				message: (error as Error).message,
@@ -65,14 +62,13 @@ export async function POST(req: NextRequest) {
 	}
 }
 
-export async function GET(req: NextRequest) {
+export async function GET() {
 	await connectToDB();
 
-	const session = await getServerSession();
-	const user = session?.user;
+	const user = await getCurrentUser();
 
 	if (!user)
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: false,
 				message: "Not authenticated",
@@ -86,17 +82,17 @@ export async function GET(req: NextRequest) {
 		const foundUser = await User.findById(user._id);
 
 		if (!foundUser)
-			return Response.json(
+			return NextResponse.json(
 				{
 					sucess: false,
 					message: "User not found",
 				},
 				{
-					status: 401,
+					status: 404,
 				}
 			);
 
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: true,
 				message: "User found",
@@ -107,13 +103,13 @@ export async function GET(req: NextRequest) {
 			}
 		);
 	} catch (error) {
-		return Response.json(
+		return NextResponse.json(
 			{
 				sucess: false,
 				message: (error as Error).message,
 			},
 			{
-				status: 401,
+				status: 500,
 			}
 		);
 	}

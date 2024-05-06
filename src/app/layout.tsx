@@ -3,6 +3,7 @@ import { Poppins } from "next/font/google";
 import { AuthProvider } from "@/context/auth-provider";
 import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
+import { Navbar } from "@/components/navbar";
 
 const poppins = Poppins({ subsets: ["latin"], weight: "400" });
 
@@ -17,9 +18,10 @@ export default function RootLayout({
 	children: React.ReactNode;
 }>) {
 	return (
-		<html lang="en" className="dark">
+		<html lang="en" className="dark" suppressHydrationWarning>
 			<AuthProvider>
-				<body className={poppins.className}>
+				<body className={poppins.className} suppressHydrationWarning>
+					<Navbar />
 					<main className="antialiased container">{children}</main>
 					<Toaster />
 				</body>

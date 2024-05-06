@@ -1,7 +1,5 @@
 "use client";
 
-import { useState } from "react";
-import { useDebounceValue } from "usehooks-ts";
 import { signInSchema, TSignIn } from "@/schemas/signin-schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
@@ -15,17 +13,14 @@ import {
 	FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import axios, { AxiosError } from "axios";
-
 import { SubmitHandler, useForm } from "react-hook-form";
-import { useEffect } from "react";
-import { ApiError } from "@/types/api-error";
+import { toast } from "@/components/ui/use-toast";
+import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 export default function Page() {
-	const [isChecking, setIsChecking] = useState(false);
-	const [usernameError, setUsernameError] = useState("");
-	const [usernameMessage, setUsernameMessage] = useState("");
-
+	const router = useRouter();
 	const form = useForm<TSignIn>({
 		resolver: zodResolver(signInSchema),
 		defaultValues: {
@@ -34,40 +29,24 @@ export default function Page() {
 		},
 	});
 
-	const [debouncedValue, setValue] = useDebounceValue(form.watch("email"), 500);
+	const onSubmit: SubmitHandler<TSignIn> = async (data) => {
+		const res = await signIn("credentials", {
+			...data,
+			redirect: false,
+		});
 
-	useEffect(() => {
-		const checkUnique = async () => {
-			if (debouncedValue) {
-				setIsChecking(true);
-				setUsernameError("");
-				try {
-					const res = await axios.get(
-						`/api/check-username-unique?username=${debouncedValue}`
-					);
-					setUsernameMessage(res.data.message);
-				} catch (error) {
-					const axiosError = error as AxiosError<ApiError>;
-					setUsernameError(
-						axiosError.response?.data.message ?? "Something went wrong"
-					);
-				} finally {
-					setIsChecking(false);
-				}
-			}
-		};
-
-		checkUnique();
-	}, [debouncedValue]);
-
-	const onSubmit: SubmitHandler<TSignIn> = (data) => {
-		setIsChecking(true);
+		if (res?.ok) router.push("/dashboard");
+		else
+			toast({
+				variant: "destructive",
+				title: "Sign in failed",
+				description: res?.error ?? "Something went wrong",
+			});
 	};
 
 	return (
 		<main>
 			<h1 className="text-3xl font-bold text-center p-4">Sign in</h1>
-			<p>Debounced value: {debouncedValue}</p>
 
 			<Form {...form}>
 				<form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
@@ -89,12 +68,16 @@ export default function Page() {
 					/>
 					<FormField
 						control={form.control}
-						name="email"
+						name="password"
 						render={({ field }) => (
 							<FormItem>
 								<FormLabel>Password</FormLabel>
 								<FormControl>
-									<Input placeholder="Your password" {...field} />
+									<Input
+										type="password"
+										placeholder="Your password"
+										{...field}
+									/>
 								</FormControl>
 								<FormDescription>
 									This is your public display name.
@@ -103,7 +86,15 @@ export default function Page() {
 							</FormItem>
 						)}
 					/>
-					<Button type="submit">Submit</Button>
+					<Button type="submit" disabled={form.formState.isSubmitting}>
+						{form.formState.isSubmitting ? (
+							<>
+								<Loader2 className="mr-2 h-4 w-4 animate-spin" /> Please wait
+							</>
+						) : (
+							"Sign In"
+						)}
+					</Button>
 				</form>
 			</Form>
 		</main>
