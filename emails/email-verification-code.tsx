@@ -55,7 +55,7 @@ export function EmailVerificationCodeTemplate({ username, otp }: Props) {
 				</Row>
 
 				<Row>
-					<Link href={`https://localhost:3000/verify/${otp}`}>
+					<Link href={`https://localhost:3000/verify/${username}`}>
 						Click here to verify user
 					</Link>
 				</Row>

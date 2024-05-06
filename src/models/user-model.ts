@@ -5,7 +5,7 @@ export interface Message extends Document {
 	createdAt: Date;
 }
 
-export interface User extends Document {
+export interface IUser extends Document {
 	username: string;
 	email: string;
 	password: string;
@@ -27,7 +27,7 @@ const messageSchema: Schema<Message> = new Schema({
 	},
 });
 
-const userSchema: Schema<User> = new Schema(
+const userSchema: Schema<IUser> = new Schema(
 	{
 		username: {
 			type: String,
@@ -76,6 +76,6 @@ const userSchema: Schema<User> = new Schema(
 	}
 );
 
-const User = (models.User as Model<User>) || model<User>("User", userSchema);
+const User = (models.User as Model<IUser>) || model<IUser>("User", userSchema);
 
 export { User };
